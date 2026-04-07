@@ -44,11 +44,11 @@ def login():
     # Get timetable data
     timetable_data = get_timetable(session)
 
-    # Check if attendance data is available
-    attendance_unavailable = (len(attendance_raw) == 0)
-
     # Process attendance data with real course names from courseplan
-    attendance_data = data_json(attendance_raw, course_plan) if not attendance_unavailable else []
+    attendance_data = data_json(attendance_raw, course_plan) if len(attendance_raw) > 0 else []
+
+    # Check if attendance data is available (raw empty OR processed data is empty)
+    attendance_unavailable = (len(attendance_raw) == 0) or (len(attendance_data) == 0)
 
     # Store data in Flask session for API endpoints
     flask_session['attendance_data'] = attendance_data
