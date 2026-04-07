@@ -103,20 +103,18 @@
             </div>
             {% endif %}
 
-            {% if attendance_unavailable %}
-            <div class="attendance-updating-msg"
-                style="background-color: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; color: #ffa500; padding: 1rem; border-radius: 8px; text-align: center; margin-top: 1.5rem; font-size: 1.1rem; font-weight: 500;">
-                Please try again later. Attendance is currently being updated.
-            </div>
-            {% endif %}
         </section>
 
-        {% if not attendance_unavailable %}
         <section class="attendance-section">
             <div class="attendance-header">
                 <h2>📚 Subject-wise Attendance</h2>
             </div>
-            {% if attendance %}
+            {% if attendance_unavailable %}
+            <div class="attendance-updating-msg"
+                style="background-color: rgba(255, 165, 0, 0.15); border: 1px solid #ffa500; color: #ffa500; padding: 1rem; border-radius: 8px; text-align: center; margin-top: 1.5rem; font-size: 1.1rem; font-weight: 500;">
+                Please try again later, The attendance is updating.
+            </div>
+            {% elif attendance %}
             <div class="subjects-grid">
                 {% for subject in attendance %}
                 <div class="subject-card {% if subject.percentage_of_attendance >= 80 %}success{% elif subject.percentage_of_attendance >= 75 %}warning{% else %}danger{% endif %}"
@@ -168,7 +166,6 @@
             </div>
             {% endif %}
         </section>
-        {% endif %}
 
         <footer class="dashboard-footer">
             <p>Website developed by <strong>Manu Sanjay</strong> Btech-IT PSG TECH</p>
