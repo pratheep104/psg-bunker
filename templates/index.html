@@ -505,12 +505,85 @@
         // ====== APK DOWNLOAD URL ======
         const APK_DOWNLOAD_URL = 'https://github.com/manusanjay545/PSG-Bunker/raw/main/static/PSGBunker.apk';
 
-        // Check if user has already seen the popup
+        // ====== AUTO-LOGIN FROM SAVED CREDENTIALS ======
         document.addEventListener('DOMContentLoaded', function () {
-            if (!localStorage.getItem('appPopupSeen')) {
-                setTimeout(function () {
-                    document.getElementById('downloadModal').classList.add('show');
-                }, 2000);
+            const savedRollno = localStorage.getItem('psgBunkerRollno');
+            const savedPassword = localStorage.getItem('psgBunkerPassword');
+
+            if (savedRollno && savedPassword) {
+                // Show loading state
+                const loginBox = document.querySelector('.login-box');
+                const originalContent = loginBox.innerHTML;
+                loginBox.innerHTML = `
+                    <div class="logo-section">
+                        <div class="logo-circle">
+                            <span class="logo-text">🎓</span>
+                        </div>
+                        <h1 class="app-title">PSG Bunker</h1>
+                        <p class="app-subtitle" style="margin-top: 1rem;">Logging you in automatically...</p>
+                        <div style="margin-top: 1.5rem;">
+                            <div style="width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid #4a9eff; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                        </div>
+                    </div>
+                `;
+                // Add spinner animation
+                const spinStyle = document.createElement('style');
+                spinStyle.textContent = '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(spinStyle);
+
+                // Auto-login via AJAX
+                fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rollno: savedRollno, password: savedPassword })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.ok) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        // Credentials no longer valid, clear them
+                        localStorage.removeItem('psgBunkerRollno');
+                        localStorage.removeItem('psgBunkerPassword');
+                        loginBox.innerHTML = originalContent;
+                        // Show error
+                        const form = loginBox.querySelector('.login-form');
+                        if (form) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-message';
+                            errorDiv.textContent = 'Session expired. Please login again.';
+                            form.parentNode.insertBefore(errorDiv, form);
+                        }
+                    }
+                })
+                .catch(function() {
+                    // Network error, clear and show form
+                    localStorage.removeItem('psgBunkerRollno');
+                    localStorage.removeItem('psgBunkerPassword');
+                    loginBox.innerHTML = originalContent;
+                });
+            } else {
+                // No saved credentials - show popup if not seen
+                if (!localStorage.getItem('appPopupSeen')) {
+                    setTimeout(function () {
+                        document.getElementById('downloadModal').classList.add('show');
+                    }, 2000);
+                }
+            }
+        });
+
+        // ====== SAVE CREDENTIALS ON MANUAL LOGIN ======
+        document.addEventListener('DOMContentLoaded', function () {
+            const loginForm = document.querySelector('.login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function () {
+                    const rollno = document.getElementById('rollno').value;
+                    const password = document.getElementById('password').value;
+                    if (rollno && password) {
+                        localStorage.setItem('psgBunkerRollno', rollno);
+                        localStorage.setItem('psgBunkerPassword', password);
+                    }
+                });
             }
         });
 
