@@ -3,9 +3,11 @@ import math
 from datetime import datetime
 import xml.etree.ElementTree as ET
 from flask import Flask, render_template, request, jsonify, session as flask_session, send_from_directory, redirect, Response
+from flask_cors import CORS
 from bunker_mod import return_attendance, data_json, get_course_plan, get_timetable, get_student_name
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.environ.get('SECRET_KEY', 'psg-bunker-secret-key-change-in-production')
 
 @app.route('/')
@@ -36,7 +38,7 @@ def login():
         else:
             return render_template("index.html", error=result)
 
-    attendance_raw, session, student_name = result
+    attendance_raw, session, student_name, student_info  = result
 
     # Get real course plan data with course titles
     course_plan = get_course_plan(session)
@@ -69,7 +71,12 @@ def login():
             attendance_lookup['BT ' + name] = pct
 
     if request.is_json:
-        return jsonify({"ok": True})
+    	return jsonify({
+         "ok": True,
+         "studentInfo": student_info,
+         "attendance": attendance_data,
+         "timetable": timetable_data
+     })
     else:
         return render_template("dashboard.html",
                              rollno=rollno,
@@ -232,4 +239,4 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)

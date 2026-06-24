@@ -80,7 +80,43 @@ def return_attendance(username, pwd):
         # Also try extracting name from attendance page if not found yet
         if not student_name:
             student_name = _extract_name_from_soup(soup)
+        student_info = {
+            "name": student_name or "",
+            "registerNumber": username,
+            "department": "",
+            "semester": "",
+            "section": ""
+        }
 
+        try:
+            info_row = soup.find(
+                "div",
+                class_="row border mt-3 p-3 rounded p-2 bg-light shadow-sm"
+            )
+
+            if info_row:
+                cols = info_row.find_all("div", class_="col-md-3")
+
+                for col in cols:
+                    text = col.get_text(separator=" ", strip=True)
+
+                    if "Name" in text:
+                        parts = text.split(":")
+                        if len(parts) > 1:
+                            student_info["name"] = parts[-1].strip()
+
+                    elif "Program" in text:
+                        parts = text.split(":")
+                        if len(parts) > 1:
+                            student_info["department"] = parts[-1].strip()
+
+                    elif "Sem No" in text:
+                        parts = text.split(":")
+                        if len(parts) > 1:
+                            student_info["semester"] = parts[-1].strip()
+
+        except Exception:
+            pass
         # Find the attendance table — try DataTables table or any table with attendance data
         table = soup.find("table", {"class": "table"})
         if not table:
@@ -133,7 +169,7 @@ def return_attendance(username, pwd):
         except:
             old_session = session  # Fallback to new session
 
-        return data, old_session, student_name
+        return data, old_session, student_name, student_info
 
     except Exception as e:
         return f"Error: {str(e)}"
